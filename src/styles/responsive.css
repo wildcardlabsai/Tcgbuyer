@@ -38,6 +38,23 @@
     display: block !important;
   }
 
+  /* App shell responsive */
+  .app-sidebar {
+    left: -240px !important;
+  }
+
+  .app-sidebar .sidebar-close-btn {
+    display: block !important;
+  }
+
+  .app-main {
+    margin-left: 0 !important;
+  }
+
+  .app-mobile-header {
+    display: flex !important;
+  }
+
   .steps-grid {
     grid-template-columns: 1fr !important;
   }

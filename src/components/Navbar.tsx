@@ -1,24 +1,35 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Logo } from './Logo';
 import { Button } from './Button';
 import { MenuIcon, CloseIcon, ArrowRight } from './Icons';
 
 const navLinks = [
-  { label: 'How It Works', href: '#how-it-works' },
-  { label: 'For Dealers', href: '#for-dealers' },
-  { label: 'Features', href: '#features' },
-  { label: 'FAQ', href: '#faq' },
+  { label: 'How It Works', href: '/#how-it-works' },
+  { label: 'For Dealers', href: '/#for-dealers' },
+  { label: 'Features', href: '/#features' },
+  { label: 'FAQ', href: '/#faq' },
 ];
 
 export const Navbar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
+  const isHome = location.pathname === '/';
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  function handleNavClick(href: string) {
+    setMenuOpen(false);
+    if (isHome && href.startsWith('/#')) {
+      const el = document.querySelector(href.replace('/', ''));
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
 
   return (
     <nav style={{
@@ -36,7 +47,7 @@ export const Navbar: React.FC = () => {
       transition: 'all 0.3s ease',
     }}>
       <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-        <a href="#" aria-label="TCGBuyer home"><Logo height={30} /></a>
+        <Link to="/" aria-label="TCGBuyer home"><Logo height={30} /></Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xl)' }}>
           <ul style={{
@@ -47,26 +58,46 @@ export const Navbar: React.FC = () => {
           }} className="nav-links">
             {navLinks.map((link) => (
               <li key={link.href}>
-                <a
-                  href={link.href}
-                  style={{
-                    fontSize: '0.9rem',
-                    fontWeight: 500,
-                    color: 'var(--color-text-secondary)',
-                    transition: 'color 0.2s',
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-secondary)'}
-                >
-                  {link.label}
-                </a>
+                {isHome ? (
+                  <a
+                    href={link.href.replace('/', '')}
+                    onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                    style={{
+                      fontSize: '0.9rem',
+                      fontWeight: 500,
+                      color: 'var(--color-text-secondary)',
+                      transition: 'color 0.2s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-secondary)'}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    to={link.href}
+                    style={{
+                      fontSize: '0.9rem',
+                      fontWeight: 500,
+                      color: 'var(--color-text-secondary)',
+                      transition: 'color 0.2s',
+                      textDecoration: 'none',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-secondary)'}
+                  >
+                    {link.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
 
-          <Button variant="primary" size="sm">
-            Get Started <ArrowRight size={14} />
-          </Button>
+          <Link to="/apply" style={{ textDecoration: 'none' }}>
+            <Button variant="primary" size="sm">
+              Get Started <ArrowRight size={14} />
+            </Button>
+          </Link>
         </div>
 
         <button
@@ -94,18 +125,20 @@ export const Navbar: React.FC = () => {
           gap: 'var(--space-md)',
         }}>
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              style={{ fontSize: '1rem', fontWeight: 500, padding: 'var(--space-sm) 0', color: 'var(--color-text)' }}
+              to={link.href}
+              onClick={() => handleNavClick(link.href)}
+              style={{ fontSize: '1rem', fontWeight: 500, padding: 'var(--space-sm) 0', color: 'var(--color-text)', textDecoration: 'none' }}
             >
               {link.label}
-            </a>
+            </Link>
           ))}
-          <Button variant="primary" size="sm">
-            Get Started <ArrowRight size={14} />
-          </Button>
+          <Link to="/apply" style={{ textDecoration: 'none' }}>
+            <Button variant="primary" size="sm">
+              Get Started <ArrowRight size={14} />
+            </Button>
+          </Link>
         </div>
       )}
     </nav>
