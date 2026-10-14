@@ -44,7 +44,7 @@ export const ProblemSolution: React.FC = () => (
             Buying collections shouldn&rsquo;t mean juggling everything else.
           </h2>
           <p style={{
-            fontSize: '1rem',
+            fontSize: '1.05rem',
             color: 'var(--color-text-secondary)',
             lineHeight: 1.7,
             maxWidth: '480px',
@@ -54,13 +54,14 @@ export const ProblemSolution: React.FC = () => (
         </div>
         <div style={{ position: 'relative' }}>
           <img
-            src="/images/cards-stacked.png"
-            alt="Trading card collections on a dealer's desk"
+            src="/images/cards-fanned.png"
+            alt="Trading card collections spread out for review"
             style={{
               width: '100%',
-              borderRadius: 'var(--radius-lg)',
+              borderRadius: '14px',
               objectFit: 'cover',
               aspectRatio: '4/3',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.1)',
             }}
           />
         </div>
@@ -72,32 +73,35 @@ export const ProblemSolution: React.FC = () => (
         gap: 'var(--space-xl)',
       }} className="steps-grid">
         {steps.map((step) => (
-          <div key={step.num} style={{ display: 'flex', gap: 'var(--space-md)' }}>
+          <div key={step.num} style={{
+            display: 'flex',
+            gap: '14px',
+            padding: '20px',
+            background: 'var(--color-bg)',
+            borderRadius: '12px',
+            border: '1px solid var(--color-border)',
+          }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
               <span style={{
                 background: 'var(--color-blue)',
                 color: '#fff',
-                fontSize: '0.7rem',
+                fontSize: '0.72rem',
                 fontWeight: 800,
                 padding: '4px 10px',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '6px',
               }}>{step.num}</span>
               <div style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                background: 'var(--color-bg)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                width: 38, height: 38, borderRadius: '50%',
+                background: 'var(--color-white)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'var(--color-navy)',
               }}>
                 {step.icon}
               </div>
             </div>
             <div>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '6px' }}>{step.title}</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>{step.desc}</p>
+              <h3 style={{ fontSize: '0.98rem', fontWeight: 700, marginBottom: '6px' }}>{step.title}</h3>
+              <p style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>{step.desc}</p>
             </div>
           </div>
         ))}

@@ -1,27 +1,27 @@
 import React from 'react';
-import { UploadIcon, SearchIcon, CheckIcon, ArrowRight } from './Icons';
+import { ArrowRight } from './Icons';
 
 const steps = [
   {
     num: '01',
-    icon: <UploadIcon />,
     title: 'Collect',
     desc: 'Give collectors a dedicated place to submit their cards or collections.',
     color: 'var(--color-blue)',
+    image: '/images/phone-app.png',
   },
   {
     num: '02',
-    icon: <SearchIcon />,
     title: 'Review',
     desc: 'Assess incoming submissions and review the information needed to make an offer.',
     color: 'var(--color-violet)',
+    image: '/images/handoff.png',
   },
   {
     num: '03',
-    icon: <CheckIcon />,
     title: 'Complete',
     desc: 'Manage the next steps and track progress through your buying workflow.',
     color: 'var(--color-green)',
+    image: '/images/cards-cash.png',
   },
 ];
 
@@ -50,36 +50,42 @@ export const HowItWorks: React.FC = () => (
           <React.Fragment key={step.num}>
             <div style={{
               background: 'var(--color-white)',
-              borderRadius: 'var(--radius-lg)',
-              padding: 'var(--space-xl)',
+              borderRadius: '14px',
               border: '1px solid var(--color-border)',
-              textAlign: 'center',
+              overflow: 'hidden',
               position: 'relative',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)', alignItems: 'center' }}>
-                <span style={{
-                  background: step.color,
-                  color: '#fff',
-                  fontSize: '0.7rem',
-                  fontWeight: 800,
-                  padding: '4px 10px',
-                  borderRadius: 'var(--radius-sm)',
-                }}>{step.num}</span>
-                <div style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  background: 'var(--color-bg)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: step.color,
-                }}>
-                  {step.icon}
-                </div>
+              <div style={{
+                width: '100%',
+                height: '140px',
+                overflow: 'hidden',
+                background: 'var(--color-bg)',
+              }}>
+                <img
+                  src={step.image}
+                  alt=""
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                  loading="lazy"
+                />
               </div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '8px' }}>{step.title}</h3>
-              <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>{step.desc}</p>
+              <div style={{ padding: '20px 22px 24px' }}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', alignItems: 'center' }}>
+                  <span style={{
+                    background: step.color,
+                    color: '#fff',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                  }}>{step.num}</span>
+                </div>
+                <h3 style={{ fontSize: '1.12rem', fontWeight: 700, marginBottom: '8px' }}>{step.title}</h3>
+                <p style={{ fontSize: '0.92rem', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>{step.desc}</p>
+              </div>
             </div>
             {i < steps.length - 1 && (
               <div className="step-arrow" style={{

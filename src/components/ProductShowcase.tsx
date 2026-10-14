@@ -6,8 +6,8 @@ export const ProductShowcase: React.FC = () => (
     padding: 'var(--space-4xl) 0',
     background: 'var(--color-bg)',
   }}>
-    <div className="container">
-      <div style={{ textAlign: 'center', marginBottom: 'var(--space-2xl)', maxWidth: '600px', margin: '0 auto var(--space-2xl)' }}>
+    <div className="container" style={{ maxWidth: '1100px' }}>
+      <div style={{ textAlign: 'center', marginBottom: 'var(--space-2xl)', maxWidth: '620px', margin: '0 auto var(--space-2xl)' }}>
         <p className="section-label" style={{ textAlign: 'center' }}>INSIDE TCGBUYER</p>
         <h2 style={{
           fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
@@ -19,7 +19,7 @@ export const ProductShowcase: React.FC = () => (
           One buying workflow.<br />From submission to purchase.
         </h2>
         <p style={{
-          fontSize: '1rem',
+          fontSize: '1.05rem',
           color: 'var(--color-text-secondary)',
           lineHeight: 1.7,
         }}>

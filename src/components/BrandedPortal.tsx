@@ -30,7 +30,7 @@ export const BrandedPortal: React.FC = () => (
             Your buying process.<br />Your brand. Your customers.
           </h2>
           <p style={{
-            fontSize: '1rem',
+            fontSize: '1.05rem',
             color: 'var(--color-text-secondary)',
             lineHeight: 1.7,
             marginBottom: 'var(--space-xl)',
@@ -38,9 +38,9 @@ export const BrandedPortal: React.FC = () => (
           }}>
             TCGBuyer is designed to help independent card shops and established TCG businesses create a more organised way to buy collections, without making the process feel complicated for their customers.
           </p>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {features.map((f) => (
-              <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', fontSize: '0.95rem', fontWeight: 500 }}>
+              <li key={f} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.98rem', fontWeight: 500 }}>
                 <CheckCircle size={20} /> {f}
               </li>
             ))}

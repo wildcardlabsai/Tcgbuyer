@@ -4,7 +4,7 @@ import { ArrowRight } from './Icons';
 
 export const FinalCTA: React.FC = () => (
   <section style={{
-    padding: 'var(--space-4xl) 0',
+    padding: 'var(--space-5xl) 0',
     background: 'var(--color-navy)',
     color: '#fff',
   }}>

@@ -49,7 +49,7 @@ const FAQItem: React.FC<{ q: string; a: string }> = ({ q, a }) => {
           textAlign: 'left',
         }}
       >
-        <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--color-text)', paddingRight: 'var(--space-md)' }}>{q}</span>
+        <span style={{ fontSize: '1.02rem', fontWeight: 600, color: 'var(--color-text)', paddingRight: 'var(--space-md)' }}>{q}</span>
         <span style={{
           fontSize: '1.3rem',
           color: 'var(--color-text-muted)',
