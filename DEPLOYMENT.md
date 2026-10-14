@@ -31,6 +31,7 @@ supabase db push
 # 1. supabase/migrations/001_initial_schema.sql
 # 2. supabase/migrations/002_fixes_rls_approval_workflow.sql
 # 3. supabase/migrations/003_email_notification_edge_function.sql
+# 4. supabase/migrations/004_security_hardening.sql
 ```
 
 ### What the migrations create
@@ -38,6 +39,7 @@ supabase db push
 - **001**: All tables, enums, triggers, RLS policies, seed data
 - **002**: Security fixes (RLS for customer_submissions, audit_log), application approval workflow (server-side function), status history tracking triggers, Supabase Storage bucket for photos, admin bootstrap function
 - **003**: Email notification queue triggers (application status, new submissions, offer sent)
+- **004**: Security hardening — safe `search_path` on all SECURITY DEFINER functions, role injection fix, audit log access restriction, data leakage prevention in token-based RPCs, offer expiry enforcement, bootstrap race condition fix
 
 ## 3. First Administrator Bootstrap
 
@@ -118,6 +120,10 @@ Migration 002 creates the `submission-photos` storage bucket automatically. Veri
 - Customer submission viewing uses token-based access via `get_submission_by_token` (SECURITY DEFINER) — tokens are never exposed through RLS
 - Offer responses go through `respond_to_offer` which verifies the token before allowing changes
 - Client-side route guards (`ProtectedRoute`) provide UX convenience but are **not** the security boundary
+- `log_audit()` is not callable via RPC — only internal SECURITY DEFINER functions can call it
+- Token-based RPCs (`get_submission_by_token`, `get_offers_by_token`) return only customer-facing columns, never dealer notes or internal data
+- All SECURITY DEFINER functions set `search_path = public` to prevent search-path injection
+- The `handle_new_user` trigger hardcodes the role to `customer` — users cannot self-assign roles via signup metadata
 
 ### Multi-tenancy
 
