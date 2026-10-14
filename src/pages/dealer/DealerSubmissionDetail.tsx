@@ -32,9 +32,10 @@ export const DealerSubmissionDetail: React.FC = () => {
 
   useEffect(() => {
     async function load() {
+      if (!organisation) { setLoading(false); return; }
       const [subRes, offersRes] = await Promise.all([
-        supabase.from('customer_submissions').select('*').eq('id', id).single(),
-        supabase.from('offers').select('*').eq('submission_id', id).order('created_at', { ascending: false }),
+        supabase.from('customer_submissions').select('*').eq('id', id).eq('organisation_id', organisation.id).single(),
+        supabase.from('offers').select('*').eq('submission_id', id).eq('organisation_id', organisation.id).order('created_at', { ascending: false }),
       ]);
       if (subRes.data) {
         const s = subRes.data as CustomerSubmission;
@@ -45,7 +46,7 @@ export const DealerSubmissionDetail: React.FC = () => {
       setLoading(false);
     }
     load();
-  }, [id]);
+  }, [id, organisation]);
 
   async function updateStatus(status: string) {
     if (!submission) return;
@@ -178,7 +179,7 @@ export const DealerSubmissionDetail: React.FC = () => {
                 {offers.map(offer => (
                   <div key={offer.id} style={{ padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-navy)' }}>${offer.amount.toLocaleString()}</span>
+                      <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-navy)' }}>£{offer.amount.toLocaleString()}</span>
                       <span style={{
                         padding: '4px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 600, textTransform: 'capitalize',
                         background: offer.status === 'sent' ? '#fef3c7' : offer.status === 'accepted' ? '#dcfce7' : offer.status === 'declined' ? '#fee2e2' : '#f3f4f6',
@@ -248,7 +249,7 @@ export const DealerSubmissionDetail: React.FC = () => {
           }}>
             <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '20px' }}>Create Offer</h2>
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '6px' }}>Amount ($)</label>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '6px' }}>Amount (£)</label>
               <input
                 type="number" step="0.01" min="0" value={offerAmount} onChange={e => setOfferAmount(e.target.value)}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--color-border)', fontSize: '0.92rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}

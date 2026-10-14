@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import type { DealerOrganisation } from '../../lib/database.types';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Upload, X } from 'lucide-react';
+
+const MAX_PHOTOS = 10;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export const SubmissionFormPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -21,6 +24,9 @@ export const SubmissionFormPage: React.FC = () => {
   const [estValue, setEstValue] = useState('');
   const [notes, setNotes] = useState('');
   const [agreedTerms, setAgreedTerms] = useState(false);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -38,6 +44,36 @@ export const SubmissionFormPage: React.FC = () => {
 
   function toggleCategory(cat: string) {
     setCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
+  }
+
+  function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    const remaining = MAX_PHOTOS - photos.length;
+    const validFiles = files.slice(0, remaining).filter(f => {
+      if (f.size > MAX_FILE_SIZE) {
+        setError(`${f.name} exceeds the 10MB size limit.`);
+        return false;
+      }
+      if (!['image/jpeg', 'image/png', 'image/webp', 'image/heic'].includes(f.type)) {
+        setError(`${f.name} is not a supported image format (JPEG, PNG, WebP, HEIC).`);
+        return false;
+      }
+      return true;
+    });
+
+    setPhotos(prev => [...prev, ...validFiles]);
+    validFiles.forEach(f => {
+      const reader = new FileReader();
+      reader.onload = () => setPhotoPreviews(prev => [...prev, reader.result as string]);
+      reader.readAsDataURL(f);
+    });
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  function removePhoto(index: number) {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -62,13 +98,40 @@ export const SubmissionFormPage: React.FC = () => {
         customer_notes: notes.trim() || null,
         agreed_to_terms: agreedTerms,
       })
-      .select('reference, access_token')
+      .select('id, reference, access_token')
       .single();
 
-    setSubmitting(false);
     if (err) {
-      setError(err.message);
-    } else if (data) {
+      setError('Failed to submit. Please try again.');
+      setSubmitting(false);
+      return;
+    }
+
+    if (data && photos.length > 0) {
+      for (let i = 0; i < photos.length; i++) {
+        const file = photos[i];
+        const ext = file.name.split('.').pop() || 'jpg';
+        const path = `${org.id}/${data.id}/${i}.${ext}`;
+
+        const { error: uploadErr } = await supabase.storage
+          .from('submission-photos')
+          .upload(path, file, { contentType: file.type });
+
+        if (!uploadErr) {
+          await supabase.from('submission_photos').insert({
+            submission_id: data.id,
+            storage_path: path,
+            file_name: file.name,
+            file_size: file.size,
+            mime_type: file.type,
+            sort_order: i,
+          });
+        }
+      }
+    }
+
+    setSubmitting(false);
+    if (data) {
       setSuccess({ reference: data.reference, token: data.access_token });
     }
   }
@@ -156,7 +219,7 @@ export const SubmissionFormPage: React.FC = () => {
               </div>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={labelStyle}>Phone (optional)</label>
-                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} placeholder="+1 (555) 000-0000" />
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} placeholder="+44 7700 000000" />
               </div>
             </div>
           </div>
@@ -166,7 +229,7 @@ export const SubmissionFormPage: React.FC = () => {
             <div style={{ marginBottom: '16px' }}>
               <label style={labelStyle}>Card categories *</label>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {(org.supported_tcg_categories?.length > 0 ? org.supported_tcg_categories : ['Pokemon', 'Magic: The Gathering', 'Yu-Gi-Oh!', 'Sports Cards', 'Other']).map(cat => (
+                {(org.supported_tcg_categories?.length > 0 ? org.supported_tcg_categories : ['Pokémon', 'Magic: The Gathering', 'Yu-Gi-Oh!', 'Other']).map(cat => (
                   <button
                     key={cat} type="button" onClick={() => toggleCategory(cat)}
                     style={{
@@ -196,7 +259,7 @@ export const SubmissionFormPage: React.FC = () => {
               </div>
               <div>
                 <label style={labelStyle}>Estimated value</label>
-                <input type="text" value={estValue} onChange={e => setEstValue(e.target.value)} style={inputStyle} placeholder="e.g. $500-$1000" />
+                <input type="text" value={estValue} onChange={e => setEstValue(e.target.value)} style={inputStyle} placeholder="e.g. £500-£1000" />
               </div>
             </div>
             <div style={{ marginTop: '16px' }}>
@@ -206,6 +269,59 @@ export const SubmissionFormPage: React.FC = () => {
                 placeholder="Anything else we should know..."
               />
             </div>
+          </div>
+
+          {/* Photo upload */}
+          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '4px' }}>Photos (optional)</h2>
+            <p style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '16px' }}>
+              Upload up to {MAX_PHOTOS} photos of your collection. JPEG, PNG, WebP or HEIC, max 10MB each.
+            </p>
+
+            {photos.length < MAX_PHOTOS && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px',
+                  borderRadius: '8px', border: '2px dashed #d1d5db', background: '#f9fafb',
+                  color: '#6b7280', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem',
+                  fontWeight: 500, width: '100%', justifyContent: 'center',
+                }}
+              >
+                <Upload size={18} /> Add Photos ({photos.length}/{MAX_PHOTOS})
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic"
+              multiple
+              onChange={handlePhotoSelect}
+              style={{ display: 'none' }}
+            />
+
+            {photoPreviews.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px', marginTop: '16px' }}>
+                {photoPreviews.map((src, i) => (
+                  <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                    <img src={src} alt={`Photo ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      style={{
+                        position: 'absolute', top: 4, right: 4, width: 22, height: 22,
+                        borderRadius: '50%', background: 'rgba(0,0,0,0.6)', border: 'none',
+                        color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: 0,
+                      }}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {org.customer_terms && (

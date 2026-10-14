@@ -3,10 +3,10 @@ import { supabase } from '../../lib/supabase';
 import { Save } from 'lucide-react';
 
 interface PlatformSetting {
-  id: string;
   key: string;
   value: unknown;
-  description: string | null;
+  updated_by: string | null;
+  updated_at: string;
 }
 
 export const AdminSettings: React.FC = () => {
@@ -15,10 +15,16 @@ export const AdminSettings: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [edited, setEdited] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase.from('platform_settings').select('*').order('key');
+      const { data, error: err } = await supabase.from('platform_settings').select('*').order('key');
+      if (err) {
+        setError('Failed to load settings.');
+        setLoading(false);
+        return;
+      }
       setSettings((data || []) as PlatformSetting[]);
       const init: Record<string, string> = {};
       (data || []).forEach((s: PlatformSetting) => {
@@ -33,19 +39,26 @@ export const AdminSettings: React.FC = () => {
   async function handleSave() {
     setSaving(true);
     setSaved(false);
+    setError('');
+    const errors: string[] = [];
     for (const setting of settings) {
       const raw = edited[setting.key];
       if (raw === undefined) continue;
       try {
         const parsed = JSON.parse(raw);
-        await supabase.from('platform_settings').update({ value: parsed }).eq('id', setting.id);
+        const { error: err } = await supabase.from('platform_settings').update({ value: parsed }).eq('key', setting.key);
+        if (err) errors.push(`${setting.key}: ${err.message}`);
       } catch {
-        // skip invalid JSON
+        errors.push(`${setting.key}: invalid JSON`);
       }
     }
     setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    if (errors.length > 0) {
+      setError(`Save errors: ${errors.join('; ')}`);
+    } else {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
   }
 
   if (loading) {
@@ -66,6 +79,15 @@ export const AdminSettings: React.FC = () => {
         </button>
       </div>
 
+      {error && (
+        <div style={{
+          background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px',
+          padding: '12px 16px', marginBottom: '20px', color: '#dc2626', fontSize: '0.88rem',
+        }}>
+          {error}
+        </div>
+      )}
+
       {saved && (
         <div style={{
           background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px',
@@ -77,13 +99,10 @@ export const AdminSettings: React.FC = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {settings.map(s => (
-          <div key={s.id} style={{ background: '#fff', borderRadius: '12px', border: '1px solid var(--color-border)', padding: '20px' }}>
+          <div key={s.key} style={{ background: '#fff', borderRadius: '12px', border: '1px solid var(--color-border)', padding: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <code style={{ fontSize: '0.85rem', fontWeight: 600, background: '#f3f4f6', padding: '2px 8px', borderRadius: '4px' }}>{s.key}</code>
             </div>
-            {s.description && (
-              <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', marginBottom: '8px' }}>{s.description}</p>
-            )}
             <textarea
               value={edited[s.key] || ''}
               onChange={e => setEdited(prev => ({ ...prev, [s.key]: e.target.value }))}

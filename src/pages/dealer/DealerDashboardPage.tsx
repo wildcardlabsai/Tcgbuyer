@@ -70,7 +70,7 @@ export const DealerDashboardPage: React.FC = () => {
     { label: 'Submissions', value: stats.submissions, icon: Inbox, color: '#3b82f6', bg: '#dbeafe', to: '/app/submissions' },
     { label: 'Pending Offers', value: stats.pendingOffers, icon: Send, color: '#f59e0b', bg: '#fef3c7', to: '/app/offers' },
     { label: 'Customers', value: stats.customers, icon: Users, color: '#10b981', bg: '#d1fae5', to: '/app/customers' },
-    { label: 'Offer Value', value: `$${stats.totalOfferValue.toLocaleString()}`, icon: DollarSign, color: '#8b5cf6', bg: '#ede9fe', to: '/app/offers' },
+    { label: 'Offer Value', value: `£${stats.totalOfferValue.toLocaleString()}`, icon: DollarSign, color: '#8b5cf6', bg: '#ede9fe', to: '/app/offers' },
   ];
 
   return (

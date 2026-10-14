@@ -22,6 +22,7 @@ export const AdminApplicationDetail: React.FC = () => {
   const [app, setApp] = useState<DealerApplication | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -31,11 +32,15 @@ export const AdminApplicationDetail: React.FC = () => {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('dealer_applications')
         .select('*')
         .eq('id', id)
         .single();
+      if (error) {
+        setLoading(false);
+        return;
+      }
       if (data) {
         const a = data as DealerApplication;
         setApp(a);
@@ -49,6 +54,7 @@ export const AdminApplicationDetail: React.FC = () => {
   async function updateStatus(status: string, extra: Record<string, unknown> = {}) {
     if (!app || !user) return;
     setActionLoading(true);
+    setActionError('');
     const { error } = await supabase
       .from('dealer_applications')
       .update({
@@ -60,14 +66,30 @@ export const AdminApplicationDetail: React.FC = () => {
       })
       .eq('id', app.id);
 
-    if (!error) {
+    if (error) {
+      setActionError(`Failed to update status: ${error.message}`);
+    } else {
       setApp(prev => prev ? { ...prev, status: status as DealerApplication['status'], ...extra } as DealerApplication : null);
     }
     setActionLoading(false);
   }
 
   async function handleApprove() {
-    await updateStatus('approved');
+    if (!app || !user) return;
+    setActionLoading(true);
+    setActionError('');
+
+    const { data, error } = await supabase.rpc('approve_dealer_application', {
+      p_application_id: app.id,
+      p_admin_id: user.id,
+    });
+
+    if (error) {
+      setActionError(`Approval failed: ${error.message}`);
+    } else {
+      setApp(prev => prev ? { ...prev, status: 'approved' as DealerApplication['status'] } : null);
+    }
+    setActionLoading(false);
   }
 
   async function handleReject() {
@@ -91,10 +113,11 @@ export const AdminApplicationDetail: React.FC = () => {
 
   async function saveNotes() {
     if (!app) return;
-    await supabase
+    const { error } = await supabase
       .from('dealer_applications')
       .update({ internal_notes: internalNotes || null })
       .eq('id', app.id);
+    if (error) setActionError(`Failed to save notes: ${error.message}`);
   }
 
   if (loading) {
@@ -118,6 +141,15 @@ export const AdminApplicationDetail: React.FC = () => {
       <Link to="/admin/applications" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '20px', textDecoration: 'none' }}>
         <ArrowLeft size={16} /> Back to applications
       </Link>
+
+      {actionError && (
+        <div style={{
+          background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px',
+          padding: '12px 16px', marginBottom: '16px', color: '#dc2626', fontSize: '0.88rem',
+        }}>
+          {actionError}
+        </div>
+      )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
@@ -173,7 +205,7 @@ export const AdminApplicationDetail: React.FC = () => {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '20px' }} className="dashboard-columns">
         {/* Main info */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid var(--color-border)', padding: '24px' }}>

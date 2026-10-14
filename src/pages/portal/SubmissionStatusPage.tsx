@@ -23,20 +23,27 @@ export const SubmissionStatusPage: React.FC = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
   const [responseNotes, setResponseNotes] = useState('');
 
   useEffect(() => {
     async function load() {
       const [orgRes, subRes] = await Promise.all([
         supabase.from('dealer_organisations').select('*').eq('slug', slug).single(),
-        supabase.from('customer_submissions').select('*').eq('access_token', token).single(),
+        supabase.rpc('get_submission_by_token', { p_token: token }),
       ]);
 
       if (orgRes.data) setOrg(orgRes.data as DealerOrganisation);
-      if (subRes.data) {
-        const s = subRes.data as CustomerSubmission;
+
+      const subData = Array.isArray(subRes.data) ? subRes.data[0] : subRes.data;
+      if (subData) {
+        const s = subData as CustomerSubmission;
+        if (orgRes.data && s.organisation_id !== (orgRes.data as DealerOrganisation).id) {
+          setLoading(false);
+          return;
+        }
         setSubmission(s);
-        const { data: offersData } = await supabase.from('offers').select('*').eq('submission_id', s.id).eq('status', 'sent').order('created_at', { ascending: false });
+        const { data: offersData } = await supabase.rpc('get_offers_by_token', { p_token: token!, p_status: 'sent' });
         setOffers((offersData || []) as Offer[]);
       }
       setLoading(false);
@@ -46,19 +53,21 @@ export const SubmissionStatusPage: React.FC = () => {
 
   async function respondToOffer(offerId: string, accept: boolean) {
     setActionLoading(true);
-    const newStatus = accept ? 'accepted' : 'declined';
-    await supabase.from('offers').update({
-      status: newStatus,
-      customer_response_at: new Date().toISOString(),
-      customer_response_notes: responseNotes || null,
-    }).eq('id', offerId);
+    setActionError('');
 
-    await supabase.from('customer_submissions').update({
-      status: accept ? 'offer_accepted' : 'offer_declined',
-    }).eq('id', submission!.id);
+    const { error } = await supabase.rpc('respond_to_offer', {
+      p_token: token!,
+      p_offer_id: offerId,
+      p_accept: accept,
+      p_notes: responseNotes || null,
+    });
 
-    setSubmission(prev => prev ? { ...prev, status: (accept ? 'offer_accepted' : 'offer_declined') as CustomerSubmission['status'] } : null);
-    setOffers(prev => prev.map(o => o.id === offerId ? { ...o, status: newStatus as Offer['status'] } : o));
+    if (error) {
+      setActionError(`Failed to respond: ${error.message}`);
+    } else {
+      setSubmission(prev => prev ? { ...prev, status: (accept ? 'offer_accepted' : 'offer_declined') as CustomerSubmission['status'] } : null);
+      setOffers(prev => prev.map(o => o.id === offerId ? { ...o, status: (accept ? 'accepted' : 'declined') as Offer['status'] } : o));
+    }
     setActionLoading(false);
   }
 
@@ -107,6 +116,15 @@ export const SubmissionStatusPage: React.FC = () => {
           <p style={{ color: '#475569', fontSize: '0.92rem', lineHeight: 1.6 }}>{status.description}</p>
         </div>
 
+        {actionError && (
+          <div style={{
+            background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px',
+            padding: '12px 16px', marginBottom: '20px', color: '#dc2626', fontSize: '0.88rem',
+          }}>
+            {actionError}
+          </div>
+        )}
+
         {/* Pending offer */}
         {pendingOffers.length > 0 && (
           <div style={{ background: '#fff', borderRadius: '12px', border: `2px solid ${accent}`, padding: '28px', marginBottom: '24px' }}>
@@ -114,7 +132,7 @@ export const SubmissionStatusPage: React.FC = () => {
             {pendingOffers.map(offer => (
               <div key={offer.id}>
                 <div style={{ fontSize: '2rem', fontWeight: 800, color: primary, marginBottom: '8px' }}>
-                  ${offer.amount.toLocaleString()} <span style={{ fontSize: '0.88rem', fontWeight: 500, color: '#6b7280' }}>{offer.currency}</span>
+                  £{offer.amount.toLocaleString()} <span style={{ fontSize: '0.88rem', fontWeight: 500, color: '#6b7280' }}>{offer.currency}</span>
                 </div>
                 {offer.dealer_message && (
                   <p style={{ color: '#475569', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '16px' }}>{offer.dealer_message}</p>

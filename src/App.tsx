@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ConfigCheck } from './components/ConfigCheck';
 import { AuthProvider } from './contexts/AuthContext';
 import { PublicLayout } from './components/layouts/PublicLayout';
 import { AppShell } from './components/layouts/AppShell';
@@ -30,6 +31,7 @@ import { SubmissionStatusPage } from './pages/portal/SubmissionStatusPage';
 import { NotFoundPage } from './pages/public/NotFoundPage';
 
 const App: React.FC = () => (
+  <ConfigCheck>
   <BrowserRouter>
     <AuthProvider>
       <Routes>
@@ -91,6 +93,7 @@ const App: React.FC = () => (
       </Routes>
     </AuthProvider>
   </BrowserRouter>
+  </ConfigCheck>
 );
 
 export default App;

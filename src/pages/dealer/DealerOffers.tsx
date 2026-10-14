@@ -94,7 +94,7 @@ export const DealerOffers: React.FC = () => {
                       </Link>
                     </td>
                     <td style={tdStyle}>{o.customer_submissions?.customer_name || '—'}</td>
-                    <td style={{ ...tdStyle, fontWeight: 700, color: 'var(--color-navy)' }}>${o.amount.toLocaleString()}</td>
+                    <td style={{ ...tdStyle, fontWeight: 700, color: 'var(--color-navy)' }}>£{o.amount.toLocaleString()}</td>
                     <td style={tdStyle}>
                       <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 600, background: sc.bg, color: sc.color, textTransform: 'capitalize' }}>
                         {o.status}
