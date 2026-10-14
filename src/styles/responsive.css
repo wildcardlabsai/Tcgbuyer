@@ -1,0 +1,71 @@
+@media (max-width: 1024px) {
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-2xl) !important;
+  }
+
+  .hero-preview {
+    display: none !important;
+  }
+
+  .hero-sidebar {
+    display: none !important;
+  }
+
+  .problem-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .portal-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-columns {
+    grid-template-columns: 1fr !important;
+  }
+
+  .stat-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-links {
+    display: none !important;
+  }
+
+  .mobile-menu-btn {
+    display: block !important;
+  }
+
+  .steps-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .how-it-works-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .step-arrow {
+    display: none !important;
+  }
+
+  .credibility-items {
+    gap: var(--space-lg) !important;
+    justify-content: flex-start !important;
+  }
+
+  .dashboard-sidebar {
+    display: none !important;
+  }
+
+  .stat-cards {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-cards {
+    grid-template-columns: 1fr !important;
+  }
+}
